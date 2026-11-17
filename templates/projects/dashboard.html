@@ -1,0 +1,449 @@
+{% extends "base.html" %}
+
+{% block title %}Tableau de bord — StratEdge{% endblock %}
+
+{% block breadcrumb %}
+<span class="text-[#1D1D1F] font-medium">Tableau de bord</span>
+{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="flex items-center justify-between mb-7">
+  <div class="flex items-center gap-4">
+    <div class="w-11 h-11 rounded-[14px] flex items-center justify-center shrink-0"
+         style="background: linear-gradient(145deg, #007AFF 0%, #5856D6 100%); box-shadow: 0 4px 14px rgba(0,122,255,0.28);">
+      <svg class="w-[22px] h-[22px] text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+      </svg>
+    </div>
+    <div>
+      <h1 class="text-[26px] font-bold text-[#1D1D1F] tracking-tight leading-none">Tableau de bord</h1>
+      <p class="text-[13px] text-[#6E6E73] mt-1.5">Vue d'ensemble de vos projets actifs</p>
+    </div>
+  </div>
+  <a href="/projects/new/" class="apple-btn-primary">
+    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+    </svg>
+    Nouveau projet
+  </a>
+</div>
+
+<!-- Stats cards -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-7">
+  <div class="apple-card px-5 py-4">
+    <p class="text-[12px] font-medium text-[#6E6E73] uppercase tracking-wide mb-2">Projets actifs</p>
+    <p class="text-[32px] font-semibold text-[#1D1D1F] leading-none">{{ projects.count }}</p>
+    <p class="text-[12px] text-[#AEAEB2] mt-2">en cours</p>
+  </div>
+  <div class="apple-card px-5 py-4">
+    <p class="text-[12px] font-medium text-[#6E6E73] uppercase tracking-wide mb-2">Total tâches</p>
+    <p class="text-[32px] font-semibold text-[#007AFF] leading-none">{{ total_tasks }}</p>
+    <p class="text-[12px] text-[#AEAEB2] mt-2">toutes tâches</p>
+  </div>
+  <div class="apple-card px-5 py-4"
+       >
+    <p class="text-[12px] font-medium text-[#6E6E73] uppercase tracking-wide mb-2">En retard</p>
+    <p class="text-[32px] font-semibold leading-none
+      {% if overdue_tasks == 0 %}text-[#34C759]
+      {% elif overdue_tasks <= 3 %}text-[#FF9500]
+      {% else %}text-[#FF3B30]{% endif %}">{{ overdue_tasks }}</p>
+    <div class="flex items-center justify-between mt-2">
+      <p class="text-[12px] text-[#AEAEB2]">
+        {% if overdue_tasks == 0 %}aucun retard
+        {% elif overdue_tasks == 1 %}1 tâche en retard
+        {% else %}{{ overdue_tasks }} tâches en retard{% endif %}
+      </p>
+      {% if overdue_tasks > 0 %}
+      <p class="text-[11px] text-[#007AFF] flex items-center gap-1 {% if overdue_tasks > 0 %}cursor-pointer {% endif %}" 
+        {% if overdue_tasks > 0 %}@click="$dispatch('open-overdue-modal')"{% endif %}>
+        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Voir le détail
+      </p>
+      {% endif %}
+    </div>
+  </div>
+  <div class="apple-card px-5 py-4">
+    <p class="text-[12px] font-medium text-[#6E6E73] uppercase tracking-wide mb-2">Avancement moyen</p>
+    <p class="text-[32px] font-semibold leading-none
+      {% if avg_progress >= 70 %}text-[#34C759]
+      {% elif avg_progress >= 40 %}text-[#FF9500]
+      {% else %}text-[#FF3B30]{% endif %}">{{ avg_progress }}<span class="text-[20px]">%</span></p>
+    <p class="text-[12px] text-[#AEAEB2] mt-2">
+      {% if avg_progress >= 70 %}bonne progression
+      {% elif avg_progress >= 40 %}progression modérée
+      {% else %}progression faible{% endif %}
+    </p>
+  </div>
+</div>
+
+<!-- Projects grid -->
+<!-- Projects grid -->
+<div class="flex items-center justify-between mb-4">
+  <h3 class="text-[15px] font-semibold text-[#1D1D1F]">Projets actifs</h3>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4" x-data="projectDraggable()">
+  {% for project in projects %}
+  <a href="/projects/{{ project.id }}/" 
+     class="apple-card apple-card-hoverable overflow-hidden block transition-all duration-200 hover:shadow-lg"
+     data-project-id="{{ project.id }}"
+     {% if project.color %}style="border: 1px solid {{ project.color }}30; border-top-width: 0;"{% endif %}>
+
+    <!-- ✅ Bandeau coloré en haut de la carte -->
+    {% if project.color %}
+    <div class="h-1.5 w-full" style="background-color: {{ project.color }};"></div>
+    {% else %}
+    <div class="h-1.5 w-full" style="background-color: var(--border-s);"></div>
+    {% endif %}
+
+    <div class="p-5">
+      <div class="flex items-start justify-between mb-3 gap-3">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <!-- ✅ Indicateur de couleur (cercle) -->
+            {% if project.color %}
+            <span class="w-3 h-3 rounded-full shrink-0 border border-black/10" style="background-color: {{ project.color }};"></span>
+            {% endif %}
+            <h4 class="font-semibold text-[#1D1D1F] text-[15px] truncate">
+              {{ project.name }}
+            </h4>
+          </div>
+          <p class="text-[12px] text-[#6E6E73] mt-0.5">
+            Chef de projet : {% if project.manager %}{{ project.manager.get_full_name|default:project.manager.username }}{% else %}—{% endif %}
+          </p>
+        </div>
+        <span class="apple-badge shrink-0
+          {% if project.status == 'active' %}badge-green
+          {% elif project.status == 'on_hold' %}badge-yellow
+          {% elif project.status == 'completed' %}badge-blue
+          {% else %}badge-gray{% endif %}">
+          {{ project.get_status_display }}
+        </span>
+      </div>
+
+      <!-- Progress -->
+      <div class="mb-3">
+        <div class="flex justify-between text-[11.5px] text-[#6E6E73] mb-1.5">
+          <span>Avancement</span>
+          <span class="font-medium text-[#1D1D1F]">{{ project.progress }}%</span>
+        </div>
+        <div class="w-full rounded-full h-[5px] overflow-hidden" style="background: var(--progress-bg)">
+          <div class="h-[5px] rounded-full transition-all duration-500"
+               style="width: {{ project.progress|stringformat:'g' }}%; background: {% if project.color %}{{ project.color }}{% else %}#007AFF{% endif %};">
+          </div>
+        </div>
+      </div>
+
+      <!-- Dates -->
+      <div class="flex items-center gap-1.5 text-[12px] text-[#AEAEB2]">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+        {{ project.start_date }} &rarr; {{ project.end_date }}
+      </div>
+    </div>
+
+    <!-- KPI footer -->
+    <div class="border-t px-5 py-3 kpi-footer"
+         {% if project.color %}style="border-top-color: {{ project.color }}30;"{% endif %}
+         x-data="{ kpi: null, loaded: false }"
+         x-init="fetch('/api/v1/projects/{{ project.id }}/kpis/latest/', {credentials:'include'})
+                   .then(r => r.ok ? r.json() : null)
+                   .then(d => { kpi = d; loaded = true; })
+                   .catch(() => { kpi = null; loaded = true; })">
+      <span x-show="!loaded" class="text-[12px] text-[#AEAEB2]">—</span>
+      <span x-show="loaded && !kpi" class="text-[12px] text-[#AEAEB2] italic">
+        Pas encore de données de planification suffisantes
+      </span>
+      <div x-show="loaded && kpi" class="flex items-center gap-4 text-[12px]">
+        <span class="font-medium"
+              :style="`color:${ kpi && kpi.schedule_health==='green' ? '#34C759' : kpi && kpi.schedule_health==='orange' ? '#FF9500' : '#FF3B30' }`">
+          SPI <span x-text="kpi ? Number(kpi.spi).toFixed(2) : ''"></span>
+        </span>
+      </div>
+    </div>
+  </a>
+  {% empty %}
+  <div class="col-span-3 apple-card p-14 text-center">
+    <div class="w-14 h-14 bg-[#F5F5F7] rounded-2xl flex items-center justify-center mx-auto mb-4">
+      <svg class="w-7 h-7 text-[#AEAEB2]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+      </svg>
+    </div>
+    <p class="text-[15px] font-medium text-[#1D1D1F] mb-1">Aucun projet actif</p>
+    <p class="text-[13px] text-[#6E6E73] mb-5">Commencez par créer votre premier projet.</p>
+    <a href="/projects/new/" class="apple-btn-primary">Créer un projet</a>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Modal tâches en retard -->
+{% if overdue_tasks > 0 %}
+<div x-data="{ open: false }"
+     @open-overdue-modal.window="open = true"
+     x-show="open"
+     x-cloak
+     class="fixed inset-0 z-50 flex items-center justify-center p-4">
+
+  <!-- Backdrop -->
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+
+  <!-- Panel -->
+  <div class="relative bg-white dark:bg-[#1C1C1E] rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col"
+       @click.stop>
+
+    <!-- Header -->
+    <div class="flex items-center justify-between px-6 py-4 border-b border-[#E5E5EA] dark:border-[#3A3A3C]">
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-[#FF3B30] inline-block"></span>
+        <h2 class="text-[16px] font-semibold text-[#1D1D1F] dark:text-white">Tâches en retard</h2>
+        <span class="ml-1 text-[12px] font-medium text-white bg-[#FF3B30] rounded-full px-2 py-0.5">{{ overdue_tasks }}</span>
+      </div>
+      <button @click="open = false"
+              class="w-7 h-7 rounded-full bg-[#F2F2F7] dark:bg-[#2C2C2E] flex items-center justify-center text-[#6E6E73] hover:bg-[#E5E5EA] transition-colors">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Liste -->
+    <div class="overflow-y-auto divide-y divide-[#F2F2F7] dark:divide-[#2C2C2E]">
+      {% for task in overdue_task_list %}
+      <a href="/projects/{{ task.project.id }}/"
+         class="flex items-start gap-3 px-6 py-4 hover:bg-[#F9F9FB] dark:hover:bg-[#2C2C2E] transition-colors block">
+        <div class="mt-0.5 shrink-0">
+          <svg class="w-4 h-4 text-[#FF3B30]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+          </svg>
+        </div>
+        <div class="min-w-0 flex-1">
+          <p class="text-[13.5px] font-medium text-[#1D1D1F] dark:text-white truncate">{{ task.name }}</p>
+          <p class="text-[12px] text-[#6E6E73] mt-0.5 truncate">{{ task.project.name }}</p>
+        </div>
+        <div class="shrink-0 text-right">
+          <p class="text-[12px] font-medium text-[#FF3B30]">{{ task.planned_end|date:"d M Y" }}</p>
+          <p class="text-[11px] text-[#AEAEB2] mt-0.5">{{ task.percent_complete }}%</p>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('alpine:init', () => {
+  Alpine.data('projectDraggable', () => ({
+    draggedElement: null,
+    dragOverElement: null,
+
+    init() {
+      const container = this.$el;
+      
+      // Restaurer l'ordre sauvegardé (avec gestion des projets manquants/supplémentaires)
+      this.restoreOrder(container);
+
+      // Événements drag & drop natifs
+      container.addEventListener('dragstart', (e) => {
+        const card = e.target.closest('[data-project-id]');
+        if (!card) return;
+        
+        this.draggedElement = card;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', card.dataset.projectId);
+        
+        card.classList.add('dragging');
+        card.style.opacity = '0.5';
+      });
+
+      container.addEventListener('dragend', (e) => {
+        const card = e.target.closest('[data-project-id]');
+        if (card) {
+          card.classList.remove('dragging');
+          card.style.opacity = '';
+        }
+        
+        document.querySelectorAll('.drag-over').forEach(el => {
+          el.classList.remove('drag-over');
+          el.style.transform = '';
+          el.style.border = '';
+          el.style.boxShadow = '';
+        });
+        
+        this.draggedElement = null;
+        this.dragOverElement = null;
+      });
+
+      container.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        
+        const targetCard = e.target.closest('[data-project-id]');
+        if (!targetCard || targetCard === this.draggedElement) {
+          return;
+        }
+        
+        document.querySelectorAll('.drag-over').forEach(el => {
+          el.classList.remove('drag-over');
+          el.style.transform = '';
+          el.style.border = '';
+          el.style.boxShadow = '';
+        });
+        
+        targetCard.classList.add('drag-over');
+        targetCard.style.transform = 'scale(1.02)';
+        targetCard.style.border = '2px solid #007AFF';
+        targetCard.style.boxShadow = '0 8px 24px rgba(0,122,255,0.25)';
+        
+        this.dragOverElement = targetCard;
+      });
+
+      container.addEventListener('dragleave', (e) => {
+        const targetCard = e.target.closest('[data-project-id]');
+        if (targetCard) {
+          targetCard.classList.remove('drag-over');
+          targetCard.style.transform = '';
+          targetCard.style.border = '';
+          targetCard.style.boxShadow = '';
+        }
+      });
+
+      container.addEventListener('drop', (e) => {
+        e.preventDefault();
+        
+        const targetCard = e.target.closest('[data-project-id]');
+        if (!targetCard || !this.draggedElement || targetCard === this.draggedElement) {
+          return;
+        }
+        
+        targetCard.classList.remove('drag-over');
+        targetCard.style.transform = '';
+        targetCard.style.border = '';
+        targetCard.style.boxShadow = '';
+        this.draggedElement.style.opacity = '';
+        this.draggedElement.classList.remove('dragging');
+        
+        const draggedIndex = Array.from(container.children).indexOf(this.draggedElement);
+        const targetIndex = Array.from(container.children).indexOf(targetCard);
+        
+        if (draggedIndex < targetIndex) {
+          container.insertBefore(this.draggedElement, targetCard.nextSibling);
+        } else {
+          container.insertBefore(this.draggedElement, targetCard);
+        }
+        
+        this.saveOrder(container);
+        
+        this.draggedElement = null;
+        this.dragOverElement = null;
+      });
+
+      // Écouter les changements de projets (si tu utilises HTMX ou des mises à jour dynamiques)
+      document.addEventListener('projectsUpdated', () => {
+        this.restoreOrder(container);
+      });
+    },
+
+    // Nouvelle méthode : restaurer l'ordre avec gestion des ajouts/suppressions
+    restoreOrder(container) {
+      const savedOrder = this.getSavedOrder();
+      const currentCards = Array.from(container.querySelectorAll('[data-project-id]'));
+      const currentIds = new Set(currentCards.map(c => c.dataset.projectId));
+      
+      if (!savedOrder || savedOrder.length === 0) {
+        // Pas d'ordre sauvegardé, tout est déjà dans l'ordre du DOM
+        return;
+      }
+
+      // Filtrer les IDs sauvegardés qui existent encore dans le DOM
+      const validSavedIds = savedOrder.filter(id => currentIds.has(id));
+      
+      // Trouver les nouveaux IDs (présents dans le DOM mais pas dans l'ordre sauvegardé)
+      const newIds = currentCards
+        .map(c => c.dataset.projectId)
+        .filter(id => !validSavedIds.includes(id));
+      
+      // Construire le nouvel ordre : IDs sauvegardés valides + nouveaux IDs à la fin
+      const newOrder = [...validSavedIds, ...newIds];
+      
+      // Réorganiser les cartes selon le nouvel ordre
+      if (newOrder.length === currentCards.length) {
+        const cardsMap = {};
+        currentCards.forEach(card => {
+          cardsMap[card.dataset.projectId] = card;
+        });
+        
+        newOrder.forEach(id => {
+          if (cardsMap[id]) {
+            container.appendChild(cardsMap[id]);
+          }
+        });
+      }
+      
+      // Sauvegarder le nouvel ordre (avec les nouveaux projets inclus)
+      this.saveOrder(container);
+    },
+
+    getSavedOrder() {
+      try {
+        const data = localStorage.getItem('dashboard_project_order');
+        return data ? JSON.parse(data) : null;
+      } catch {
+        return null;
+      }
+    },
+
+    saveOrder(container) {
+      const cards = Array.from(container.querySelectorAll('[data-project-id]'));
+      const order = cards.map(c => c.dataset.projectId);
+      localStorage.setItem('dashboard_project_order', JSON.stringify(order));
+    }
+  }));
+});
+</script>
+
+<style>
+  [data-project-id] {
+    cursor: grab;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  [data-project-id]:active {
+    cursor: grabbing;
+  }
+  
+  [data-project-id].dragging {
+    opacity: 0.4;
+    transform: scale(0.95);
+  }
+  
+  [data-project-id].drag-over {
+    transform: scale(1.02) !important;
+    border: 2px solid #007AFF !important;
+    box-shadow: 0 8px 24px rgba(0,122,255,0.25) !important;
+    transition: transform 0.15s ease, border 0.15s ease, box-shadow 0.15s ease;
+  }
+  
+  .dark [data-project-id].drag-over {
+    box-shadow: 0 8px 24px rgba(0,122,255,0.4) !important;
+  }
+  
+  @media (max-width: 768px) {
+    [data-project-id] {
+      cursor: default;
+      touch-action: auto;
+    }
+  }
+</style>
+
+{% endblock %}

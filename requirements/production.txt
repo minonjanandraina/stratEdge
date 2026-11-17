@@ -1,0 +1,4 @@
+-r base.txt
+uvicorn[standard]>=0.30
+whitenoise>=6.6
+sentry-sdk>=1.39

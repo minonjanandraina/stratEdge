@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }} — StratEdge</title>
+  <style>
+    body { margin:0; padding:0; background:#F5F5F7; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif; }
+    .wrapper { max-width:520px; margin:40px auto; padding:0 16px; }
+    .card { background:#ffffff; border-radius:18px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.08),0 12px 40px rgba(0,0,0,0.06); }
+    .accent-bar { height:5px; background:{{ accent_color }}; }
+    .header { padding:24px 40px 20px; text-align:center; border-bottom:1px solid rgba(0,0,0,0.07); }
+    .icon-wrap { width:52px; height:52px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:24px; margin-bottom:8px; background:{{ accent_color }}18; }
+    .body { padding:32px 40px; }
+    .greeting { font-size:16px; font-weight:600; color:#1D1D1F; margin:0 0 10px; }
+    .notif-title { font-size:18px; font-weight:700; color:{{ accent_color }}; margin:0 0 14px; letter-spacing:-0.3px; }
+    .text { font-size:14px; color:#6E6E73; line-height:1.7; margin:0 0 28px; }
+    .btn-wrap { text-align:center; margin-bottom:24px; }
+    .btn { display:inline-block; background:{{ accent_color }}; color:#ffffff; text-decoration:none; padding:13px 32px; border-radius:12px; font-size:14px; font-weight:600; }
+    .divider { border:none; border-top:1px solid rgba(0,0,0,0.07); margin:20px 0; }
+    .footer { padding:18px 40px; background:#F5F5F7; text-align:center; }
+    .footer p { margin:0; font-size:12px; color:#AEAEB2; line-height:1.5; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="card">
+
+      <div class="accent-bar"></div>
+
+      <div class="header">
+        <img src="{{ site_url }}/static/img/logo.png" alt="StratEdge"
+             style="height:56px;width:auto;object-fit:contain;display:block;margin:0 auto 12px;">
+      </div>
+
+      <div class="body">
+        <div class="icon-wrap">{{ icon }}</div>
+        <p class="greeting">Bonjour {{ user.get_full_name|default:user.username }},</p>
+        <p class="notif-title">{{ title }}</p>
+        <p class="text">{{ message }}</p>
+
+        <div class="btn-wrap">
+          <a href="{{ site_url }}" class="btn">Accéder à StratEdge</a>
+        </div>
+
+        <hr class="divider">
+      </div>
+
+      <div class="footer">
+        <p>Vous recevez cet email car vous êtes membre d'un projet sur StratEdge.<br>
+        &copy; StratEdge — DFS Project Management</p>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

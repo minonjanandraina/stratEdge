@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirmez votre email — StratEdge</title>
+  <style>
+    body { margin: 0; padding: 0; background: #F5F5F7; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; }
+    .wrapper { max-width: 520px; margin: 40px auto; padding: 0 16px; }
+    .card { background: #ffffff; border-radius: 18px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 12px 40px rgba(0,0,0,0.06); }
+    .header { background: #ffffff; padding: 28px 40px 20px; text-align: center; border-bottom: 1px solid rgba(0,0,0,0.07); }
+    .header-icon { width: 56px; height: 56px; background: rgba(255,255,255,0.2); border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+    .header h1 { margin: 0; color: #ffffff; font-size: 22px; font-weight: 600; letter-spacing: -0.3px; }
+    .body { padding: 36px 40px; }
+    .greeting { font-size: 16px; font-weight: 600; color: #1D1D1F; margin: 0 0 12px; }
+    .text { font-size: 14px; color: #6E6E73; line-height: 1.6; margin: 0 0 28px; }
+    .btn-wrap { text-align: center; margin-bottom: 28px; }
+    .btn { display: inline-block; background: #007AFF; color: #ffffff; text-decoration: none; padding: 14px 36px; border-radius: 12px; font-size: 15px; font-weight: 600; letter-spacing: -0.1px; }
+    .divider { border: none; border-top: 1px solid rgba(0,0,0,0.07); margin: 24px 0; }
+    .link-fallback { font-size: 12px; color: #AEAEB2; line-height: 1.5; word-break: break-all; }
+    .link-fallback a { color: #007AFF; text-decoration: none; }
+    .footer { padding: 20px 40px; background: #F5F5F7; text-align: center; }
+    .footer p { margin: 0; font-size: 12px; color: #AEAEB2; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="card">
+
+      <div class="header">
+        <img src="{{ site_url }}/static/img/logo.png" alt="StratEdge"
+             style="height:64px; width:auto; object-fit:contain; display:block; margin:0 auto;">
+      </div>
+
+      <div class="body">
+        <p class="greeting">Bonjour {{ user.get_full_name|default:user.username }},</p>
+        <p class="text">
+          Merci de vous être inscrit sur <strong>StratEdge</strong>. Pour activer votre compte et commencer à gérer vos projets, veuillez confirmer votre adresse email en cliquant sur le bouton ci-dessous.
+        </p>
+
+        <div class="btn-wrap">
+          <a href="{{ link }}" class="btn">Confirmer mon email</a>
+        </div>
+
+        <p class="text" style="margin-bottom: 0;">
+          Ce lien est valable <strong>{{ expiry_hours }} heures</strong>. Après ce délai, vous pourrez en demander un nouveau depuis la page de confirmation.
+        </p>
+
+        <hr class="divider">
+
+        <p class="link-fallback">
+          Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br>
+          <a href="{{ link }}">{{ link }}</a>
+        </p>
+      </div>
+
+      <div class="footer">
+        <p>Si vous n'avez pas créé de compte sur StratEdge, ignorez cet email.<br>
+        &copy; StratEdge — DFS Project Management</p>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>
